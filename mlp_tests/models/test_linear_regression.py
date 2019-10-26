@@ -1,14 +1,8 @@
 import unittest
 import numpy as np
 import numpy.testing as npt
-
-import mpl_toolkits.mplot3d.axes3d
-import matplotlib.pyplot as plt
-
 from mlp_tests.models.utils import generate_random_basis
-
 import mlp.models.linear_regression as linear_regression
-from sklearn.linear_model import LinearRegression
 
 class Test_linear_regression(unittest.TestCase):
     
@@ -63,12 +57,6 @@ class Test_linear_regression(unittest.TestCase):
 
         y_pred_1 = model.predict(X_test)
         npt.assert_array_almost_equal(y_pred_1, y_test, decimal=1)
-
-        model = LinearRegression()
-        model.fit(X, y)
-
-        y_pred_2 = model.predict(X_test)
-        npt.assert_array_almost_equal(y_pred_1, y_pred_2, decimal=1)
 
     def test_1000_coplanar_10d(self):
         dim = 10
@@ -125,11 +113,6 @@ class Test_linear_regression(unittest.TestCase):
         npt.assert_almost_equal(np.dot(model_normal/np.linalg.norm(model_normal, ord=2), normal), 1, decimal=4)
         npt.assert_almost_equal(model.intercept_/np.linalg.norm(model_normal), np.dot(-mean, normal), decimal=1)
 
-        modelSk = LinearRegression()
-        modelSk.fit(X, y)
-        npt.assert_array_almost_equal(model.coef_, modelSk.coef_, decimal=6)
-        npt.assert_almost_equal(model.intercept_, modelSk.intercept_, decimal=6)
-
     def test_gaussian_high_corr_nd(self):
         dim = 5
         mean = np.zeros(dim)
@@ -148,13 +131,8 @@ class Test_linear_regression(unittest.TestCase):
         model.fit(X, y)
 
         model_normal = np.concatenate((model.coef_, [-1]))
-        #npt.assert_almost_equal(np.dot(model_normal/np.linalg.norm(model_normal, ord=2), normal), 1, decimal=4)
-        #npt.assert_almost_equal(model.intercept_/np.linalg.norm(model_normal), np.dot(-mean, normal), decimal=1)
-
-        modelSk = LinearRegression()
-        modelSk.fit(X, y)
-        npt.assert_array_almost_equal(model.coef_, modelSk.coef_, decimal=6)
-        npt.assert_almost_equal(model.intercept_, modelSk.intercept_, decimal=6)
+        npt.assert_almost_equal(np.dot(model_normal/np.linalg.norm(model_normal, ord=2), normal), 1, decimal=4)
+        npt.assert_almost_equal(model.intercept_/np.linalg.norm(model_normal), np.dot(-mean, normal), decimal=1)
 
 if __name__ == '__main__':
     unittest.main()
