@@ -6,3 +6,5 @@ __pycache__
 /.pytest_cache
 /.idea
 /.vs
+/.vscode
+/etf_mu_homework

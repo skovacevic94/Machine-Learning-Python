@@ -1,7 +1,6 @@
-from sklearn.base import BaseEstimator
 import numpy as np
 
-class LinearRegression(BaseEstimator):
+class LinearRegression(object):
     def __init__(self, C=0):
         self._lambda = C
         return
@@ -12,7 +11,7 @@ class LinearRegression(BaseEstimator):
         E = np.identity(X.shape[1])
         E[0, 0] = 0 # Don't regularize bias (intercept) term
 
-        X_d = np.linalg.inv(np.matmul(X_t, X) - self._lambda*E)
+        X_d = np.linalg.pinv(np.matmul(X_t, X) + self._lambda*E)
         theta = np.dot(np.matmul(X_d, X_t), y)
         self.coef_ = theta[1:]
         self.intercept_ = theta[0]
@@ -27,4 +26,3 @@ class LinearRegression(BaseEstimator):
             raise RuntimeError("You must train classifer before predicting data!")
 
         return np.dot(X, self.coef_) + self.intercept_
-       
