@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{6fcf1b90-e7b3-4ee0-90df-54302930e7a3}</ProjectGuid>
+    <ProjectGuid>{42a27dda-2c48-4a28-837a-69f2ee551651}</ProjectGuid>
     <ProjectHome>..\mlp\</ProjectHome>
     <StartupFile>__init__.py</StartupFile>
     <SearchPath />
@@ -19,13 +19,17 @@
     <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="models\elastic_net_regression.py" />
     <Compile Include="models\linear_regression.py" />
+    <Compile Include="models\loess_regression.py" />
     <Compile Include="models\__init__.py" />
+    <Compile Include="model_selection\split.py" />
+    <Compile Include="pipeline\preprocessing.py" />
     <Compile Include="__init__.py" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="models" />
+    <Folder Include="model_selection" />
+    <Folder Include="pipeline" />
   </ItemGroup>
   <ItemGroup>
     <InterpreterReference Include="Global|ContinuumAnalytics|Anaconda37-64" />

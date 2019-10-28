@@ -1,92 +1,78 @@
 import numpy as np
 import math
 
-def tricubic(x):
-    y = np.zeros_like(x)
-    idx = (x >= -1) & (x <= 1)
-    y[idx] = np.power(1.0 - np.power(np.abs(x[idx]), 3), 3)
-    return y
 
-class Loess(object):
+class LoessRegression(object):
+    def __init__(self, bandwidth=1, use_matrix=True, learning_rate=0.01, max_iter=None):
+        self._bandwith = bandwidth
+        self._use_matrix = use_matrix
+        self._max_iter = max_iter
+        if not use_matrix and max_iter is None:
+            self._max_iter = 400
+        self._learning_rate = learning_rate
+    
+    def fit(self, X, y):
+        X = np.concatenate((np.ones(shape=(X.shape[0], 1)), X), axis=1)
+        self._P = X
+        self._Y = y
+        return self
 
-    @staticmethod
-    def normalize_array(array):
-        min_val = np.min(array)
-        max_val = np.max(array)
-        return (array - min_val) / (max_val - min_val), min_val, max_val
+    def _distance(self, x):
+        D = self._P - x
+        dist = np.linalg.norm(D, ord=2, axis=1)
+        return dist
 
-    def __init__(self, xx, yy, degree=1):
-        self.n_xx, self.min_xx, self.max_xx = self.normalize_array(xx)
-        self.n_yy, self.min_yy, self.max_yy = self.normalize_array(yy)
-        self.degree = degree
+    def _get_weights(self, x):
+        dist = self._distance(x)
+        weights = np.exp(-dist/(2*np.square(self._bandwith)))
+        return np.diag(weights)
 
-    @staticmethod
-    def get_min_range(distances, window):
-        min_idx = np.argmin(distances)
-        n = len(distances)
-        if min_idx == 0:
-            return np.arange(0, window)
-        if min_idx == n-1:
-            return np.arange(n - window, n)
+    def _fit_normal(self, X):
+        result = []
+        for x in X:
+            x = np.concatenate(([1], x), axis=0)
+            x = np.reshape(x, newshape=(1, X.shape[1]+1))
+            P = self._P
+            Y = self._Y
+            P_t = P.transpose()
 
-        min_range = [min_idx]
-        while len(min_range) < window:
-            i0 = min_range[0]
-            i1 = min_range[-1]
-            if i0 == 0:
-                min_range.append(i1 + 1)
-            elif i1 == n-1:
-                min_range.insert(0, i0 - 1)
-            elif distances[i0-1] < distances[i1+1]:
-                min_range.insert(0, i0 - 1)
-            else:
-                min_range.append(i1 + 1)
-        return np.array(min_range)
+            W = self._get_weights(x)
 
-    @staticmethod
-    def get_weights(distances, min_range):
-        max_distance = np.max(distances[min_range])
-        weights = tricubic(distances[min_range] / max_distance)
-        return weights
+            P_d = np.linalg.pinv(np.matmul(np.matmul(P_t, W), P))
+            theta = np.dot(np.matmul(np.matmul(P_d, P_t), W), Y)
+            result.append(np.dot(x, theta))
+        return np.reshape(np.array(result), newshape=(len(result), 1))
 
-    def normalize_x(self, value):
-        return (value - self.min_xx) / (self.max_xx - self.min_xx)
+    def _fit_gdc(self, X):
+        P = self._P
+        P_t = np.transpose(P)
+        Y = self._Y
 
-    def denormalize_y(self, value):
-        return value * (self.max_yy - self.min_yy) + self.min_yy
+        n = P.shape[0]
+        m = P.shape[1]
 
-    def estimate(self, x, window, use_matrix=False, degree=1):
-        n_x = self.normalize_x(x)
-        distances = np.abs(self.n_xx - n_x)
-        min_range = self.get_min_range(distances, window)
-        weights = self.get_weights(distances, min_range)
+        result = []
+        for x in X:
+            x = np.concatenate(([1], x), axis=0)
+            x = np.reshape(x, newshape=(1, m))
 
-        if use_matrix or degree > 1:
-            wm = np.multiply(np.eye(window), weights)
-            xm = np.ones((window, degree + 1))
+            theta = np.random.normal(0, 0.2, size=(m,1))
+            theta[m-1] = 1
 
-            xp = np.array([[math.pow(n_x, p)] for p in range(degree + 1)])
-            for i in range(1, degree + 1):
-                xm[:, i] = np.power(self.n_xx[min_range], i)
+            dist = self._distance(x)
+            weights = np.reshape(np.exp(-dist/self._bandwith), newshape=(n, 1))
+            for i in range(self._max_iter):
+                error_term = (np.reshape(P @ theta, newshape=(n, 1)) - Y)
+                cost_gradient = (1 / n) * P_t @ (np.multiply(error_term, weights))
+                theta = theta - (self._learning_rate) * cost_gradient
 
-            ym = self.n_yy[min_range]
-            xmt_wm = np.transpose(xm) @ wm
-            beta = np.linalg.pinv(xmt_wm @ xm) @ xmt_wm @ ym
-            y = (beta @ xp)[0]
+            self.coef_ = theta[1:]
+            self.intercept_ = theta[0]
+            result.append(np.dot(x, theta))
+        return np.reshape(np.array(result), newshape=(len(result), 1))
+
+    def predict(self, X):
+        if self._use_matrix:
+            return self._fit_normal(X)
         else:
-            xx = self.n_xx[min_range]
-            yy = self.n_yy[min_range]
-            sum_weight = np.sum(weights)
-            sum_weight_x = np.dot(xx, weights)
-            sum_weight_y = np.dot(yy, weights)
-            sum_weight_x2 = np.dot(np.multiply(xx, xx), weights)
-            sum_weight_xy = np.dot(np.multiply(xx, yy), weights)
-
-            mean_x = sum_weight_x / sum_weight
-            mean_y = sum_weight_y / sum_weight
-
-            b = (sum_weight_xy - mean_x * mean_y * sum_weight) / \
-                (sum_weight_x2 - mean_x * mean_x * sum_weight)
-            a = mean_y - b * mean_x
-            y = a + b * n_x
-        return self.denormalize_y(y)
+            return self._fit_gdc(X)
