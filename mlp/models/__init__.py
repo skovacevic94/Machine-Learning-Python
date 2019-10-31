@@ -1,2 +1,3 @@
 from mlp.models.linear_regression import LinearRegression
 from mlp.models.loess_regression import LoessRegression
+from mlp.models.logistic_regression import LogisticRegression

@@ -5,8 +5,8 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{42a27dda-2c48-4a28-837a-69f2ee551651}</ProjectGuid>
     <ProjectHome>..\mlp\</ProjectHome>
-    <StartupFile>__init__.py</StartupFile>
-    <SearchPath />
+    <StartupFile>models\logistic_regression.py</StartupFile>
+    <SearchPath>..\..\Machine-Learning-Python</SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
     <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
@@ -19,14 +19,24 @@
     <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="activations\sigmoid.py" />
+    <Compile Include="activations\__init__.py" />
+    <Compile Include="metrics\regression.py" />
+    <Compile Include="metrics\__init__.py" />
     <Compile Include="models\linear_regression.py" />
     <Compile Include="models\loess_regression.py" />
+    <Compile Include="models\logistic_regression.py" />
     <Compile Include="models\__init__.py" />
+    <Compile Include="model_selection\cross_validation.py" />
     <Compile Include="model_selection\split.py" />
+    <Compile Include="model_selection\__init__.py" />
     <Compile Include="pipeline\preprocessing.py" />
+    <Compile Include="pipeline\__init__.py" />
     <Compile Include="__init__.py" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="activations\" />
+    <Folder Include="metrics\" />
     <Folder Include="models" />
     <Folder Include="model_selection" />
     <Folder Include="pipeline" />
