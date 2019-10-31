@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{42a27dda-2c48-4a28-837a-69f2ee551651}</ProjectGuid>
     <ProjectHome>..\mlp\</ProjectHome>
-    <StartupFile>models\logistic_regression.py</StartupFile>
+    <StartupFile>models\softmax_regression.py</StartupFile>
     <SearchPath>..\..\Machine-Learning-Python</SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
@@ -20,12 +20,18 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="activations\sigmoid.py" />
+    <Compile Include="activations\softmax.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="activations\__init__.py" />
     <Compile Include="metrics\regression.py" />
     <Compile Include="metrics\__init__.py" />
     <Compile Include="models\linear_regression.py" />
     <Compile Include="models\loess_regression.py" />
     <Compile Include="models\logistic_regression.py" />
+    <Compile Include="models\softmax_regression.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="models\__init__.py" />
     <Compile Include="model_selection\cross_validation.py" />
     <Compile Include="model_selection\split.py" />

@@ -1,6 +1,4 @@
-
 import numpy as np
-import matplotlib.pyplot as plt
 
 from mlp.activations import sigmoid
 
@@ -11,9 +9,6 @@ class LogisticRegression(object):
         self._max_iter = max_iter
         self._batch_size = batch_size
 
-    def _cost_function(self):
-        pass
-
     def fit(self, X, y):
         n = X.shape[0]
         m = X.shape[1]
@@ -23,10 +18,10 @@ class LogisticRegression(object):
         X = np.concatenate((np.ones(shape=(n, 1)), X), axis=1)
         for iteration in range(self._max_iter):
             h_theta = sigmoid(np.dot(X, theta))
-            cost_gradient = (1 / n) * np.dot(np.transpose(X), (np.reshape(y, newshape=(n, 1)) - h_theta))
+            cost_gradient = -(1 / n) * np.dot(np.transpose(X), (np.reshape(y, newshape=(n, 1)) - h_theta))
             regularization_term = (self._lambda/n)*theta
             regularization_term[0] = 0 # Dont regularize bias
-            theta = theta + (self._learning_rate) * (cost_gradient + regularization_term)
+            theta = theta - (self._learning_rate) * (cost_gradient + regularization_term)
 
         self.coef_ = theta[1:]
         self.intercept_ = theta[0]
@@ -44,6 +39,7 @@ class LogisticRegression(object):
 
 if __name__ == "__main__":
     from sklearn.datasets import make_classification
+    import matplotlib.pyplot as plt
     
     X, y = make_classification(200, 2, 2, 0, weights=[.5, .5])
 
