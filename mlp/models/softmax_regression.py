@@ -34,7 +34,9 @@ class SoftmaxRegression(object):
                 #    for i in range(n):
                 #        delta_l = delta_l + ((y[i]==l)-h_theta[i, l])*X[i, :]
                 #    self._theta[:, l] = self._theta[:, l] + (self._learning_rate*delta_l)
-                self._theta = self._theta - (self._learning_rate)*(-np.matmul(X_batch.T, E) + (self._lambda/n)*self._theta)
+                regularization = (self._lambda/n)*self._theta
+                regularization[:, k-1] = 0 # Don't update last column
+                self._theta = self._theta - (self._learning_rate)*(-np.matmul(X_batch.T, E) + regularization)
 
     def predict(self, X):
         # Check if coef and intercept are defined, meaning that model is trained
