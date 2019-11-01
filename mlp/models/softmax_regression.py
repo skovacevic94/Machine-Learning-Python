@@ -1,37 +1,40 @@
 import numpy as np
+
+from mlp.model_selection import next_batch
 from mlp.activations import softmax
 
 class SoftmaxRegression(object):
     """description of class"""
-    def __init__(self, learning_rate=0.01, max_iter=400, batch_size=None):
+    def __init__(self, C=0, learning_rate=0.01, max_iter=400, batch_size=None):
+        self._lambda = C
         self._learning_rate = learning_rate
         self._max_iter = max_iter
         self._batch_size = batch_size
 
     def fit(self, X, y):
-        n = X.shape[0]
         m = X.shape[1]
         unique = np.unique(y)
         k = unique.shape[0]
 
         self._theta = np.random.normal(0, 0.2, size=(m+1, k))
         self._theta[:, k-1] = 0
-        X = np.concatenate((np.ones(shape=(n, 1)), X), axis=1)
-        X_t = X.T
-
-        Y = np.zeros((n, k))
-        Y[np.arange(n), y] = 1
+        X = np.concatenate((np.ones(shape=(X.shape[0], 1)), X), axis=1)
+        
+        Y = np.zeros((X.shape[0], k))
+        Y[np.arange(X.shape[0]), y] = 1
         for iteration in range(self._max_iter):
-            h_theta = softmax(np.dot(X, self._theta))
-            E = Y - h_theta
-            E[:, k-1] = 0
+            for X_batch, Y_batch in next_batch(X, Y, self._batch_size):
+                n = X_batch.shape[0]
+                h_theta = softmax(np.dot(X_batch, self._theta))
+                E = Y_batch - h_theta
+                E[:, k-1] = 0
 
-            #for l in range(k-1):
-            #    delta_l = np.zeros((m+1,))
-            #    for i in range(n):
-            #        delta_l = delta_l + ((y[i]==l)-h_theta[i, l])*X[i, :]
-            #    self._theta[:, l] = self._theta[:, l] + (self._learning_rate*delta_l)
-            self._theta = self._theta - (self._learning_rate)*(-np.matmul(X_t, E))
+                #for l in range(k-1):
+                #    delta_l = np.zeros((m+1,))
+                #    for i in range(n):
+                #        delta_l = delta_l + ((y[i]==l)-h_theta[i, l])*X[i, :]
+                #    self._theta[:, l] = self._theta[:, l] + (self._learning_rate*delta_l)
+                self._theta = self._theta - (self._learning_rate)*(-np.matmul(X_batch.T, E) + (self._lambda/n)*self._theta)
 
     def predict(self, X):
         # Check if coef and intercept are defined, meaning that model is trained
@@ -50,7 +53,7 @@ if __name__=="__main__":
     
     X, y = make_classification(200, 2, 2, 0, weights=[.3, .3, .4], n_classes=3, n_clusters_per_class=1, random_state=29)
 
-    model = SoftmaxRegression(C=1)
+    model = SoftmaxRegression(C=1, batch_size=32)
     model.fit(X, y)
 
     xx, yy = np.mgrid[-5:5:.01, -5:5:.01]

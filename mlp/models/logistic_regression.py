@@ -1,5 +1,6 @@
 import numpy as np
 
+from mlp.model_selection import next_batch
 from mlp.activations import sigmoid
 
 class LogisticRegression(object):
@@ -10,18 +11,20 @@ class LogisticRegression(object):
         self._batch_size = batch_size
 
     def fit(self, X, y):
-        n = X.shape[0]
         m = X.shape[1]
 
         theta = np.random.normal(0, 0.2, size=(m+1, 1))
         theta[0] = 1
-        X = np.concatenate((np.ones(shape=(n, 1)), X), axis=1)
+        X = np.concatenate((np.ones(shape=(X.shape[0], 1)), X), axis=1)
         for iteration in range(self._max_iter):
-            h_theta = sigmoid(np.dot(X, theta))
-            cost_gradient = -(1 / n) * np.dot(np.transpose(X), (np.reshape(y, newshape=(n, 1)) - h_theta))
-            regularization_term = (self._lambda/n)*theta
-            regularization_term[0] = 0 # Dont regularize bias
-            theta = theta - (self._learning_rate) * (cost_gradient + regularization_term)
+            for X_batch, y_batch in next_batch(X, y, self._batch_size):
+                n = X_batch.shape[0]
+
+                h_theta = sigmoid(np.dot(X_batch, theta))
+                cost_gradient = -(1 / n) * np.dot(np.transpose(X_batch), (np.reshape(y_batch, newshape=(n, 1)) - h_theta))
+                regularization_term = (self._lambda/n)*theta
+                regularization_term[0] = 0 # Dont regularize bias
+                theta = theta - (self._learning_rate) * (cost_gradient + regularization_term)
 
         self.coef_ = theta[1:]
         self.intercept_ = theta[0]
@@ -43,7 +46,7 @@ if __name__ == "__main__":
     
     X, y = make_classification(200, 2, 2, 0, weights=[.5, .5])
 
-    model = LogisticRegression()
+    model = LogisticRegression(batch_size=32)
     model.fit(X, y)
 
     xx, yy = np.mgrid[-5:5:.01, -5:5:.01]
