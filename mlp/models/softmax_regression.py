@@ -13,8 +13,7 @@ class SoftmaxRegression(object):
 
     def fit(self, X, y):
         m = X.shape[1]
-        unique = np.unique(y)
-        k = unique.shape[0]
+        k = np.max(y) + 1
 
         self._theta = np.random.normal(0, 0.2, size=(m+1, k))
         self._theta[:, k-1] = 0

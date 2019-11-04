@@ -41,6 +41,12 @@
     <Compile Include="model_selection\__init__.py" />
     <Compile Include="pipeline\preprocessing.py" />
     <Compile Include="pipeline\__init__.py" />
+    <Compile Include="statistics\pdf.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="statistics\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="__init__.py" />
   </ItemGroup>
   <ItemGroup>
@@ -48,6 +54,7 @@
     <Folder Include="metrics\" />
     <Folder Include="models" />
     <Folder Include="model_selection" />
+    <Folder Include="statistics\" />
     <Folder Include="pipeline" />
   </ItemGroup>
   <ItemGroup>
