@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{42a27dda-2c48-4a28-837a-69f2ee551651}</ProjectGuid>
     <ProjectHome>..\mlp\</ProjectHome>
-    <StartupFile>models\gaussian_naive_bayes.py</StartupFile>
+    <StartupFile>models\quadratic_discriminant_analysis.py</StartupFile>
     <SearchPath>..\..\Machine-Learning-Python</SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
@@ -32,6 +32,9 @@
     <Compile Include="models\linear_regression.py" />
     <Compile Include="models\loess_regression.py" />
     <Compile Include="models\logistic_regression.py" />
+    <Compile Include="models\quadratic_discriminant_analysis.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="models\softmax_regression.py">
       <SubType>Code</SubType>
     </Compile>
