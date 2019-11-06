@@ -2,16 +2,19 @@ import numpy as np
 
 from mlp.model_selection import next_batch
 from mlp.activations import softmax
+from mlp.metrics.classification import cross_entropy
 
 class SoftmaxRegression(object):
     """description of class"""
-    def __init__(self, C=0, learning_rate=0.01, max_iter=400, batch_size=None):
+    def __init__(self, C=0, learning_rate=0.01, max_iter=400, batch_size=None, verbose=None):
         self._lambda = C
         self._learning_rate = learning_rate
         self._max_iter = max_iter
         self._batch_size = batch_size
 
     def fit(self, X, y):
+        self.loss_ = []
+
         m = X.shape[1]
         k = np.max(y) + 1
 
@@ -22,6 +25,7 @@ class SoftmaxRegression(object):
         Y = np.zeros((X.shape[0], k))
         Y[np.arange(X.shape[0]), y] = 1
         for iteration in range(self._max_iter):
+            iteration_loss = []
             for X_batch, Y_batch in next_batch(X, Y, self._batch_size):
                 n = X_batch.shape[0]
                 h_theta = softmax(np.dot(X_batch, self._theta))
@@ -36,6 +40,8 @@ class SoftmaxRegression(object):
                 regularization = (self._lambda/n)*self._theta
                 regularization[:, k-1] = 0 # Don't update last column
                 self._theta = self._theta - (self._learning_rate)*(-np.matmul(X_batch.T, E) + regularization)
+
+                self.loss_.append(cross_entropy(Y_batch, h_theta))
 
     def predict(self, X):
         # Check if coef and intercept are defined, meaning that model is trained

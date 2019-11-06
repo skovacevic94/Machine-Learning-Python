@@ -7,9 +7,9 @@ def train_test_split(X, y, test_size=0.33, random_state=None):
     rnd = np.random.RandomState(random_state)
     rnd.shuffle(indices)
 
-    split_point = np.round(n*(1-test_size))
-    X_train, y_train = np.take(X, indices[0:split_point]), np.take(y, indices[0:split_point])
-    X_test, y_test = np.take(X, indices[split_point:]), np.take(y, indices[split_point:])
+    split_point = int(np.round(n*(1-test_size)))
+    X_train, y_train = np.take(X, indices[0:split_point], axis=0), np.take(y, indices[0:split_point])
+    X_test, y_test = np.take(X, indices[split_point:], axis=0), np.take(y, indices[split_point:])
     return X_train, y_train, X_test, y_test
 
 

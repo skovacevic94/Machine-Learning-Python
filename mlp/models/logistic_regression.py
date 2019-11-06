@@ -2,6 +2,7 @@ import numpy as np
 
 from mlp.model_selection import next_batch
 from mlp.activations import sigmoid
+from mlp.metrics.classification import cross_entropy_bin
 
 class LogisticRegression(object):
     def __init__(self, C=0, learning_rate=0.01, max_iter=400, batch_size=None):
@@ -11,6 +12,7 @@ class LogisticRegression(object):
         self._batch_size = batch_size
 
     def fit(self, X, y):
+        self.loss_ = []
         m = X.shape[1]
 
         theta = np.random.normal(0, 0.2, size=(m+1, 1))
@@ -26,6 +28,7 @@ class LogisticRegression(object):
                 regularization_term[0] = 0 # Dont regularize bias
                 theta = theta - (self._learning_rate) * (cost_gradient + regularization_term)
 
+                self.loss_.append(cross_entropy_bin(y_batch, h_theta))
         self.coef_ = theta[1:]
         self.intercept_ = theta[0]
         
@@ -51,17 +54,14 @@ if __name__ == "__main__":
 
     xx, yy = np.mgrid[-5:5:.01, -5:5:.01]
     grid = np.c_[xx.ravel(), yy.ravel()]
-    probs = model.predict(grid).reshape(xx.shape)
+    probs = model.predict(grid)
+    Z = (probs>0.5).reshape(xx.shape)
 
     f, ax = plt.subplots(figsize=(8, 6))
-    contour = ax.contourf(xx, yy, probs, 25, cmap="RdBu",
-                          vmin=0, vmax=1)
-    ax_c = f.colorbar(contour)
-    ax_c.set_label("$P(y = 1)$")
-    ax_c.set_ticks([0, .25, .5, .75, 1])
+    plt.pcolormesh(xx, yy, Z, cmap=plt.cm.Paired)
 
     ax.scatter(X[100:,0], X[100:, 1], c=y[100:], s=50,
-               cmap="RdBu", vmin=-.2, vmax=1.2,
+               cmap=plt.cm.Paired, vmin=-.2, vmax=1.2,
                edgecolor="white", linewidth=1)
 
     ax.set(aspect="equal",

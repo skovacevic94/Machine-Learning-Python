@@ -4,7 +4,7 @@ from mlp.statistics import gaussian_pdf
 
 class GaussianNaiveBayes(object):
     """description of class"""
-    
+
     def fit(self, X, y):
         n = X.shape[0]
         m = X.shape[1]
