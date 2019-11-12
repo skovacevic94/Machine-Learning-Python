@@ -6,7 +6,7 @@ from mlp.metrics.classification import cross_entropy
 
 class SoftmaxRegression(object):
     """description of class"""
-    def __init__(self, C=0, learning_rate=0.01, max_iter=400, batch_size=None, verbose=None):
+    def __init__(self, C=0, learning_rate=0.01, max_iter=400, batch_size=None):
         self._lambda = C
         self._learning_rate = learning_rate
         self._max_iter = max_iter
