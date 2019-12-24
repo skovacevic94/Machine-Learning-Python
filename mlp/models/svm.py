@@ -3,7 +3,7 @@ from cvxopt import matrix, solvers
 from sklearn.metrics import pairwise_distances
 
 class SVM(object):
-    def __init__(self, C=1, sigma=None, kernel='linear'):
+    def __init__(self, C=1, sigma=None, kernel='rbf'):
         self._C = C
         self._sigma = sigma
         self._kernel = kernel
@@ -51,9 +51,6 @@ class SVM(object):
 
         try:
             solvers.options['show_progress'] = False
-            solvers.options['abstol'] = 1e-10
-            solvers.options['reltol'] = 1e-10
-            solvers.options['feastol'] = 1e-10
             sol = solvers.qp(matrix(P), matrix(q), matrix(G), matrix(h))
             if 'optimal' not in sol['status']:
                 raise RuntimeError("Optimal solution not found.")
@@ -65,13 +62,9 @@ class SVM(object):
     # Running time O(n_1*n_2). Memory Complexity O(n_1 + n_2)
     # Maybe can be improved with some Computational Geometry techniques to compute pairwise distances
     def _rbf_kernel_matrix(self, X_1, X_2):
-        sigma = self._sigma
-        if sigma is None:
-            sigma = np.sqrt(X.shape[1]/2)*X.std()
-
         D_pair = np.einsum('ijk->ij', (X_1[:, None, :] - X_2)**2)
         #D_pair = np.power(pairwise_distances(X_1, X_2), 2)
-        return np.exp(-D_pair/(2*sigma**2))
+        return np.exp(-D_pair/(2*self._sigma**2))
 
     def _linear_kernel(self, X_1, X_2):
         return np.matmul(X_1, X_2.T)
@@ -87,7 +80,6 @@ class SVM(object):
         P = np.outer(y, y) * K
         q = -np.ones(n) # Linear factors of alpha. <\alpha, q> = \alpha_1 + \alpha_2 + ... + \alpha_n
 
-        
         G_0 = -np.identity(n) # Handle constraints \alpha_i >= 0  <==> -\alpha_i < 0
         h_0 = np.zeros((n, 1)) # Handle constraints \alpha_i >= 0  <==> -\alpha_i < 0
         
@@ -102,15 +94,11 @@ class SVM(object):
 
         try:
             solvers.options['show_progress'] = False
-            #solvers.options['abstol'] = 1e-10
-            #solvers.options['reltol'] = 1e-10
-            #solvers.options['feastol'] = 1e-10
             sol = solvers.qp(matrix(P), matrix(q), matrix(G), matrix(h), matrix(A), matrix(b))
             if 'optimal' not in sol['status']:
                 raise RuntimeError("Optimal solution not found.")
         except ValueError:
             raise RuntimeError("Optimal solution not found.") 
-
 
         largrange_mul = np.array(sol['x'])
         support_vector_idx = np.where(largrange_mul >= 1e-5)[0]
@@ -122,10 +110,15 @@ class SVM(object):
         self._intercept = self._support_y[0] + np.dot(K[support_vector_idx[0], support_vector_idx], -self.largrange_mul_*self._support_y)
 
     def fit(self, X, y):
+        X_ = X.astype("double")
+        y_ = y.astype("double")
+        if self._sigma is None:
+            self._sigma = np.sqrt(X_.shape[1]/2)*X_.std()
+
         if self._kernel == 'linear':
-            self._fit_linear_primal(X, y)
+            self._fit_linear_primal(X_, y_)
         elif self._kernel == 'rbf':
-            self._fit_rbf_dual(X, y)
+            self._fit_rbf_dual(X_, y_)
 
     def _predict_linear_primal(self, X):
         #Check if _w is defined, meaning that model is trained
@@ -147,20 +140,23 @@ class SVM(object):
         except AttributeError:
             raise RuntimeError("You must train classifer before predicting data!")
 
-        K = self._rbf_kernel_matrix(X, self.support_vectors_)
+        K = self._rbf_kernel_matrix(X.astype('double'), self.support_vectors_)
         return np.sign(np.dot(K, self.largrange_mul_*self._support_y) + self._intercept)
         
     def predict(self, X):
         if self._kernel == 'linear':
-            return self._predict_linear_primal(X)
+            pred = self._predict_linear_primal(X.astype('double'))
         elif self._kernel == 'rbf':
-            return self._predict_rbf_dual(X)
+            pred = self._predict_rbf_dual(X.astype('double'))
+
+        pred_0 = np.where(pred == -1)
+        pred[pred_0] = 0
+        return pred
 
 if __name__ == "__main__":
     from sklearn.datasets import make_classification
     import matplotlib.pyplot as plt
-    from sklearn.svm import SVC
-    
+
     #X, y = make_classification(200, 2, 2, 0, weights=[.5, .5])
     mean_0 = [-1, -1]
     cov_0 = [[0.1, 0], [0, 0.1]]
@@ -185,33 +181,14 @@ if __name__ == "__main__":
     X = np.concatenate((X_0, X_1, X_e), axis=0)
     y = np.concatenate((y_0, y_1, y_e), axis=0)
 
+    model = SVM(C=1, sigma=np.sqrt(0.02), kernel="rbf")
+    model.fit(X, y)
 
-    model1 = SVM(C=0.5, sigma=np.sqrt(1/(2*0.3488504335005425)), kernel="rbf")
-    model1.fit(X, y)
-    
-    model2 = SVC(C=0.5, gamma='scale', kernel='rbf')
-    model2.fit(X, y)
-    
     xx, yy = np.mgrid[-5:5:.01, -5:5:.01]
     grid = np.c_[xx.ravel(), yy.ravel()]
     
     #plt.subplot(2, 1, 1)
-    probs = model1.predict(grid)
-    Z = (probs>0).reshape(xx.shape)
-
-    f, ax = plt.subplots(figsize=(8, 6))
-    plt.pcolormesh(xx, yy, Z, cmap=plt.cm.Paired)
-
-    ax.scatter(X[:, 0], X[:, 1], c=y[:], s=50,
-               cmap=plt.cm.Paired, vmin=-.2, vmax=1.2,
-               edgecolor="white", linewidth=1)
-
-    ax.set(aspect="equal",
-           xlim=(-5, 5), ylim=(-5, 5),
-           xlabel="$X_1$", ylabel="$X_2$")
-
-    #plt.subplot(2, 1, 2)
-    probs = model2.predict(grid)
+    probs = model.predict(grid)
     Z = (probs>0).reshape(xx.shape)
 
     f, ax = plt.subplots(figsize=(8, 6))
